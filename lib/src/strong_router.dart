@@ -54,7 +54,7 @@ class StrongRouter {
         final key = pathSegment.substring(1);
 
         if (args != null && args.containsKey(key)) {
-          parameters[key] = args[key]!;
+          parameters[key] = args[key];
           continue;
         }
 

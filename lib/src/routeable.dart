@@ -35,7 +35,7 @@ abstract class Routeable {
     Map<String, dynamic>? parameters,
   ]) {
     String path = this.path;
-    Map<String, Object>? arguments = {};
+    Map<String, Object?>? arguments = {};
 
     assert(
       !path.contains(':') || parameters != null,
@@ -54,7 +54,7 @@ abstract class Routeable {
       'Unknown parameter for path: $path',
     );
 
-    for (final parameter in (parameters ?? <String, Object>{}).entries) {
+    for (final parameter in (parameters ?? <String, Object?>{}).entries) {
       if (parameter.value is String) {
         path = path.replaceFirst(
           ':${parameter.key}',
