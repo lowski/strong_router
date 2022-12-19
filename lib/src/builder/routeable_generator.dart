@@ -255,6 +255,7 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
         generatePushMethod(
           b,
           returnTypePerParameter: returnTypePerParameter,
+          replaceFuture: routeIsFutureRoute,
         );
 
         generatePushPathMethod(

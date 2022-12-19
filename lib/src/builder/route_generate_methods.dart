@@ -66,6 +66,7 @@ void _generateRouteablePushToProxy(
 void generatePushMethod(
   ClassBuilder b, {
   required Map<String, DartType> returnTypePerParameter,
+  bool replaceFuture = false,
 }) {
   b.methods.add(Method((b) {
     b.name = 'push';
@@ -73,10 +74,14 @@ void generatePushMethod(
     _generateRouteablePushToProxy(
       b,
       parameterReturnTypeMap: returnTypePerParameter.map(
-        (key, value) => MapEntry(
-          key,
-          value.getDisplayString(withNullability: true),
-        ),
+        (key, value) {
+          return MapEntry(
+            key,
+            value
+                .getDisplayString(withNullability: true)
+                .replaceAll('Future', replaceFuture ? 'FutureOr' : 'Future'),
+          );
+        },
       ),
     );
   }));
@@ -113,7 +118,7 @@ void generateRouteableProxyMethods(ClassBuilder b) {
     b.optionalParameters.add(
       Parameter((b) => b
         ..name = 'parameters'
-        ..type = refer('Map<String, Object>?')),
+        ..type = refer('Map<String, dynamic>?')),
     );
     b.body = const Code('routeable.pushTo(context, parameters)');
   }));
