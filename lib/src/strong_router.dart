@@ -7,7 +7,7 @@ import 'routed.dart';
 class StrongRouter {
   final List<Routeable> routeables;
 
-  StrongRouter({
+  const StrongRouter({
     required this.routeables,
   });
 
