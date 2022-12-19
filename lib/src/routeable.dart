@@ -32,7 +32,7 @@ abstract class Routeable {
 
   Future<T?> pushTo<T extends Object?>(
     BuildContext context, [
-    Map<String, Object>? parameters,
+    Map<String, dynamic>? parameters,
   ]) {
     String path = this.path;
     Map<String, Object>? arguments = {};
