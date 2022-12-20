@@ -8,6 +8,8 @@ import 'routed.dart';
 class AsyncRouteable extends Routeable {
   @override
   final String path;
+  @override
+  final List<String>? alternativePaths;
 
   @override
   RouteableBuilder get builder => _asyncBuilder;
@@ -35,12 +37,13 @@ class AsyncRouteable extends Routeable {
     );
   }
 
-  AsyncRouteable({
+  const AsyncRouteable({
     required this.path,
     required RouteableBuilder builder,
     required this.loadingBuilder,
     required this.parameterParser,
     this.errorBuilder,
+    this.alternativePaths,
   })  : _loadedBuilder = builder,
         super.empty();
 }

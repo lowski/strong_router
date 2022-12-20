@@ -27,18 +27,23 @@ class StrongRouter {
     final uriSegments = uri.pathSegments;
 
     for (final routeable in routeables) {
-      final pathSegments = routeable.path.split('/').where((e) => e.isNotEmpty);
+      final paths = [routeable.path, ...routeable.alternativePaths ?? []];
 
-      if (pathSegments.length != uriSegments.length) {
+      final segmentLengthMatch = paths.any((p) {
+        final pathSegments = p.split('/').where((String e) => e.isNotEmpty);
+        return pathSegments.length == uriSegments.length;
+      });
+      if (!segmentLengthMatch) {
+        continue;
+      }
+
+      final matchedPath = routeable.getMatchedPath(settings.name!);
+      if (matchedPath == null) {
         continue;
       }
 
       final parameters = <String, Object?>{};
-
-      // check if the path segments match
-      if (!routeable.matches(settings.name!)) {
-        continue;
-      }
+      final pathSegments = matchedPath.split('/').where((e) => e.isNotEmpty);
 
       // parse the parameters
       for (var i = 0; i < pathSegments.length; i++) {

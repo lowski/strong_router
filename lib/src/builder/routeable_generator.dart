@@ -65,6 +65,14 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
         : annotation.read('parameterParser').mapValue;
     final returnTypePerParameter = <String, DartType>{};
     final functionNameByParameter = <String, String>{};
+    final List<String> alternativePaths =
+        annotation.read('alternativePaths').isNull
+            ? []
+            : annotation
+                .read('alternativePaths')
+                .listValue
+                .map((e) => e.toStringValue()!)
+                .toList();
 
     for (final entry in mapValue.entries) {
       final stringKey = entry.key!.toStringValue()!;
@@ -202,6 +210,10 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
               b.static = true;
               b.modifier = FieldModifier.final$;
 
+              final alternativePathsAssignment = alternativePaths.isEmpty
+                  ? null
+                  : '[${alternativePaths.map((e) => "'$e'").join(',\n')},]';
+
               if (routeIsFutureRoute) {
                 final errorWidgetHasConstConstructor = errorWidget != null &&
                     (errorWidget.element as ClassElement)
@@ -230,6 +242,7 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
                     builder: $routeableBuilder,
                     loadingBuilder: (context, routed) => $loadingWidgetConstPrefix ${loadingWidget.element!.name}(),
                     errorBuilder: $errorBuilderAssignment,
+                    alternativePaths: $alternativePathsAssignment,
                   )''',
                 );
               } else {
@@ -241,6 +254,7 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
                       ${argMapToCode(functionNameByParameter, quoteKeys: true)}
                     },
                     builder: $routeableBuilder,
+                    alternativePaths: $alternativePathsAssignment,
                   )''',
                 );
               }

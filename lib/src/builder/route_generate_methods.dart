@@ -142,6 +142,15 @@ void generateRouteableProxyMethods(ClassBuilder b) {
   }));
 
   b.methods.add(Method((b) {
+    b.name = 'alternativePaths';
+    b.type = MethodType.getter;
+    b.lambda = true;
+    b.annotations.add(const CodeExpression(Code('override')));
+
+    b.body = const Code('routeable.alternativePaths');
+  }));
+
+  b.methods.add(Method((b) {
     b.name = 'parameterParser';
     b.type = MethodType.getter;
     b.lambda = true;
@@ -161,5 +170,17 @@ void generateRouteableProxyMethods(ClassBuilder b) {
         ..type = refer('String')),
     );
     b.body = const Code('routeable.matches(path)');
+  }));
+  b.methods.add(Method((b) {
+    b.name = 'getMatchedPath';
+    b.lambda = true;
+    b.annotations.add(const CodeExpression(Code('override')));
+
+    b.requiredParameters.add(
+      Parameter((b) => b
+        ..name = 'path'
+        ..type = refer('String')),
+    );
+    b.body = const Code('routeable.getMatchedPath(path)');
   }));
 }
