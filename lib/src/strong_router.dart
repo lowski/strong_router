@@ -30,8 +30,6 @@ class StrongRouter {
       final pathSegments = routeable.path.split('/').where((e) => e.isNotEmpty);
 
       if (pathSegments.length != uriSegments.length) {
-        lDebug(this,
-            'not a match: ${pathSegments.length} != ${uriSegments.length} (for routeable ${routeable.path})');
         continue;
       }
 
@@ -73,9 +71,6 @@ class StrongRouter {
 
   Route<dynamic> generateRoute(RouteSettings settings) {
     final routed = parseRoute(settings);
-
-    lDebug(this, 'generateRoute(${settings.name})');
-    lDebug(this, 'I have ${routeables.length} routeables');
 
     if (routed == null) {
       throw Exception('Invalid route: ${settings.name}');
