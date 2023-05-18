@@ -2,6 +2,7 @@ import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:code_builder/code_builder.dart';
+import 'package:collection/collection.dart';
 import 'package:source_gen/source_gen.dart';
 
 import '../annotations.dart';
@@ -73,6 +74,13 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
                 .listValue
                 .map((e) => e.toStringValue()!)
                 .toList();
+    final additionalParameters = annotation.read('additionalParameters').isNull
+        ? []
+        : annotation
+            .read('additionalParameters')
+            .listValue
+            .map((e) => e.toStringValue()!)
+            .toList();
 
     for (final entry in mapValue.entries) {
       final stringKey = entry.key!.toStringValue()!;
@@ -116,10 +124,27 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
       );
     }
 
+    if (defaultConstructor.parameters
+        .any((element) => element.isRequiredPositional)) {
+      throw InvalidGenerationSourceError(
+        'The constructor of $routeableName must not have any required positional'
+        ' parameters.',
+        element: element,
+      );
+    }
+
+    final Set<String> requiredConstructorParameters = defaultConstructor
+        .parameters
+        .where((element) => element.isRequired)
+        .map((e) => e.name)
+        .toSet();
+
     for (final parameter in defaultConstructor.parameters) {
-      if (!parameter.hasDefaultValue &&
-          !parameter.isOptional &&
-          !returnTypePerParameter.containsKey(parameter.name)) {
+      if (!parameter.isNamed) continue;
+
+      if (parameter.isRequired &&
+          !returnTypePerParameter.containsKey(parameter.name) &&
+          !additionalParameters.contains(parameter.name)) {
         throw InvalidGenerationSourceError(
           'The class $routeableName must have a zero argument constructor or all'
           ' parameters must have a default value or be provided by the route. '
@@ -127,8 +152,15 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
           element: element,
         );
       }
-      if (parameter.isNamed &&
+
+      if (additionalParameters.contains(parameter.name) &&
           returnTypePerParameter.containsKey(parameter.name)) {
+        throw InvalidGenerationSourceError(
+          'The parameter "${parameter.name}" cannot be in both '
+          '[additionalParameters] and [parameterParser].',
+          element: element,
+        );
+      } else if (returnTypePerParameter.containsKey(parameter.name)) {
         final parameterType = parameter.type;
         final returnType = returnTypePerParameter[parameter.name]!;
 
@@ -168,11 +200,13 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
         // we actually have a value for
         final constructorArgTypes = <String, DartType>{};
         for (final param in defaultConstructor.parameters) {
-          if (!returnTypePerParameter.containsKey(param.name)) continue;
-
-          constructorArgTypes[param.name] = returnTypePerParameter[param.name]!;
+          if (returnTypePerParameter.containsKey(param.name)) {
+            constructorArgTypes[param.name] =
+                returnTypePerParameter[param.name]!;
+          } else if (additionalParameters.contains(param.name)) {
+            constructorArgTypes[param.name] = param.type;
+          }
         }
-
         final constructorArgs = <String, String>{};
         for (final entry in constructorArgTypes.entries) {
           final name = entry.key;
@@ -213,6 +247,10 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
               final alternativePathsAssignment = alternativePaths.isEmpty
                   ? null
                   : '[${alternativePaths.map((e) => "'$e'").join(',\n')},]';
+              final additionalParametersAssignment = additionalParameters
+                      .isEmpty
+                  ? null
+                  : '[${additionalParameters.map((e) => "'$e'").join(',\n')},]';
 
               if (routeIsFutureRoute) {
                 final errorWidgetHasConstConstructor = errorWidget != null &&
@@ -243,6 +281,7 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
                     loadingBuilder: (context, routed) => $loadingWidgetConstPrefix ${loadingWidget.element!.name}(),
                     errorBuilder: $errorBuilderAssignment,
                     alternativePaths: $alternativePathsAssignment,
+                    additionalParameters: $additionalParametersAssignment,
                   )''',
                 );
               } else {
@@ -255,6 +294,7 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
                     },
                     builder: $routeableBuilder,
                     alternativePaths: $alternativePathsAssignment,
+                    additionalParameters: $additionalParametersAssignment,
                   )''',
                 );
               }
@@ -266,16 +306,31 @@ class RouteableGenerator extends GeneratorForAnnotation<BaseRoute> {
           b.constant = true;
         }));
 
+        // for the push method, we need to add the non-path parameters to the
+        // return type map
+        final augmentedReturnTypePerParameter = Map.of(returnTypePerParameter);
+        for (final param in defaultConstructor.parameters) {
+          if (additionalParameters.contains(param.name)) {
+            augmentedReturnTypePerParameter[param.name] = param.type;
+          }
+        }
         generatePushMethod(
           b,
-          returnTypePerParameter: returnTypePerParameter,
+          returnTypePerParameter: augmentedReturnTypePerParameter,
           replaceFuture: routeIsFutureRoute,
         );
 
-        generatePushPathMethod(
-          b,
-          returnTypePerParameter: returnTypePerParameter,
-        );
+        // If none of the non-path parameters are required we can generate a
+        // pushPath method. Otherwise, that is not possible because there is
+        // no way to turn the Strings that are passed into pushPath into the
+        // correct values for the widget.
+        if (additionalParameters.none(
+            (element) => requiredConstructorParameters.contains(element))) {
+          generatePushPathMethod(
+            b,
+            returnTypePerParameter: returnTypePerParameter,
+          );
+        }
 
         generateRouteableProxyMethods(b);
       },

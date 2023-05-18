@@ -10,6 +10,8 @@ class AsyncRouteable extends Routeable {
   final String path;
   @override
   final List<String>? alternativePaths;
+  @override
+  final List<String>? additionalParameters;
 
   @override
   RouteableBuilder get builder => _asyncBuilder;
@@ -44,6 +46,7 @@ class AsyncRouteable extends Routeable {
     required this.parameterParser,
     this.errorBuilder,
     this.alternativePaths,
+    this.additionalParameters,
   })  : _loadedBuilder = builder,
         super.empty();
 }

@@ -33,6 +33,13 @@ abstract class Routeable {
   /// The same rules apply as for [path].
   List<String>? get alternativePaths;
 
+  /// The parameters that are not part of the path.
+  ///
+  /// This is useful if you want to pass parameters to the route that cannot be
+  /// part of the path, e.g. a callback function. They are not parsed from the
+  /// path, but passed directly to the route.
+  List<String>? get additionalParameters;
+
   @protected
   const Routeable.empty();
 
@@ -41,6 +48,7 @@ abstract class Routeable {
     required RouteableBuilder builder,
     Map<String, Object? Function(String value)>? parameterParser,
     List<String>? alternativePaths,
+    List<String>? additionalParameters,
   }) = _Routeable;
 
   Future<T?> pushTo<T extends Object?>(
@@ -63,12 +71,15 @@ abstract class Routeable {
       'Missing parameter for path: $path',
     );
     assert(
-      parameters?.keys.every((key) => path.contains(':$key')) ?? true,
+      parameters?.keys.every((key) =>
+              path.contains(':$key') ||
+              (additionalParameters?.contains(key) ?? true)) ??
+          true,
       'Unknown parameter for path: $path',
     );
 
     for (final parameter in (parameters ?? <String, Object?>{}).entries) {
-      if (parameter.value is String) {
+      if (parameter.value is String && path.contains(':${parameter.key}')) {
         path = path.replaceFirst(
           ':${parameter.key}',
           parameter.value as String,
@@ -124,11 +135,15 @@ class _Routeable extends Routeable {
   @override
   final RouteableBuilder builder;
 
+  @override
+  final List<String>? additionalParameters;
+
   _Routeable({
     required this.path,
     required this.builder,
     this.parameterParser,
     this.alternativePaths,
+    this.additionalParameters,
   })  : assert(!path.contains(':') || parameterParser != null,
             'Parameter parser required for path: $path'),
         assert(

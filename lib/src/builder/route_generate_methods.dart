@@ -149,6 +149,14 @@ void generateRouteableProxyMethods(ClassBuilder b) {
 
     b.body = const Code('routeable.alternativePaths');
   }));
+  b.methods.add(Method((b) {
+    b.name = 'additionalParameters';
+    b.type = MethodType.getter;
+    b.lambda = true;
+    b.annotations.add(const CodeExpression(Code('override')));
+
+    b.body = const Code('routeable.additionalParameters');
+  }));
 
   b.methods.add(Method((b) {
     b.name = 'parameterParser';

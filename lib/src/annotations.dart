@@ -4,11 +4,13 @@ class StrongRoute extends BaseRoute {
   final String path;
   final Map<String, Object? Function(String value)>? parameterParser;
   final List<String>? alternativePaths;
+  final List<String>? additionalParameters;
 
   const StrongRoute(
     this.path, {
     this.parameterParser,
     this.alternativePaths,
+    this.additionalParameters,
   });
 }
 
@@ -18,6 +20,7 @@ class FutureStrongRoute extends BaseRoute {
   final Type loadingWidget;
   final Type? errorWidget;
   final List<String>? alternativePaths;
+  final List<String>? additionalParameters;
 
   const FutureStrongRoute({
     required this.path,
@@ -25,5 +28,6 @@ class FutureStrongRoute extends BaseRoute {
     this.errorWidget,
     this.parameterParser,
     this.alternativePaths,
+    this.additionalParameters,
   });
 }

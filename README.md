@@ -73,6 +73,31 @@ This will lead to the `getOrder` function being called, when the route is access
 
 Note: Unfortunately due to the way annotations work in dart you can only pass a declared function in `parameterParser`. An inline function does not work as it is not a constant value.
 
+#### Additional Parameters
+
+Sometimes a widget has parameters you can't or don't want to serialize/deserialize to/from a String. An example would be a callback function. In this case you can pass a list of `additionalParameters` to the `StrongRoute`:
+
+```dart
+@StrongRoute(
+    '/search',
+    additionalParameters: ['onSearchCallback']
+)
+class SearchScreen extends StatelessWidget {
+    static const route = _SearchScreenRoute();
+
+    final void Function(String?) onSearchCallback;
+
+    SearchScreen({
+        Key? key,
+        required this.onSearchCallback,
+    }) : super(key: key);
+
+    // ...
+}
+```
+
+Note: In case the parameter is required (such as above) the `pushPath` method (which takes all the parameters in their `String` serialization) is not generated on the `Routeable`, because calling it would lead to a runtime exception in the router (there would be no way to parse the `String`).
+
 ### Navigating within the App
 
 The main advantage is to provide a standardized strongly-typed way to navigate within the app. This is accesses through a `Route`. There are two ways of pushing a screen to the navigator: `push` and `pushPath`.

@@ -65,6 +65,12 @@ class StrongRouter {
         parameters[key] = value;
       }
 
+      for (final key in routeable.additionalParameters ?? []) {
+        if (args != null && args.containsKey(key)) {
+          parameters[key] = args[key];
+        }
+      }
+
       return Routed(
         routeable: routeable,
         parameters: parameters,
