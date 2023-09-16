@@ -124,71 +124,81 @@ void generateRouteableProxyMethods(ClassBuilder b) {
   }));
 
   b.methods.add(Method((b) {
-    b.name = 'builder';
-    b.type = MethodType.getter;
+    b.name = 'generateRoute';
+    b.returns = refer('Route<dynamic>');
     b.lambda = true;
     b.annotations.add(const CodeExpression(Code('override')));
-
-    b.body = const Code('routeable.builder');
-  }));
-
-  b.methods.add(Method((b) {
-    b.name = 'path';
-    b.type = MethodType.getter;
-    b.lambda = true;
-    b.annotations.add(const CodeExpression(Code('override')));
-
-    b.body = const Code('routeable.path');
-  }));
-
-  b.methods.add(Method((b) {
-    b.name = 'alternativePaths';
-    b.type = MethodType.getter;
-    b.lambda = true;
-    b.annotations.add(const CodeExpression(Code('override')));
-
-    b.body = const Code('routeable.alternativePaths');
-  }));
-  b.methods.add(Method((b) {
-    b.name = 'additionalParameters';
-    b.type = MethodType.getter;
-    b.lambda = true;
-    b.annotations.add(const CodeExpression(Code('override')));
-
-    b.body = const Code('routeable.additionalParameters');
-  }));
-
-  b.methods.add(Method((b) {
-    b.name = 'parameterParser';
-    b.type = MethodType.getter;
-    b.lambda = true;
-    b.annotations.add(const CodeExpression(Code('override')));
-
-    b.body = const Code('routeable.parameterParser');
-  }));
-
-  b.methods.add(Method((b) {
-    b.name = 'matches';
-    b.lambda = true;
-    b.annotations.add(const CodeExpression(Code('override')));
-
     b.requiredParameters.add(
       Parameter((b) => b
-        ..name = 'path'
-        ..type = refer('String')),
+        ..name = 'router'
+        ..type = refer('StrongRouter')),
     );
-    b.body = const Code('routeable.matches(path)');
+    b.optionalParameters.add(
+      Parameter((b) => b
+        ..name = 'parameters'
+        ..type = refer('Map<String, dynamic>?')),
+    );
+    b.body = const Code('routeable.generateRoute(router, parameters)');
   }));
+
+  _addProxyGetter(b, 'builder');
+  _addProxyGetter(b, 'path');
+  _addProxyGetter(b, 'alternativePaths');
+  _addProxyGetter(b, 'additionalParameters');
+  _addProxyGetter(b, 'parameterParser');
+
+  _addProxyMethod(b, 'matches',
+      routeableMethodCall: 'matches(path)',
+      requiredParameters: {
+        'path': 'String',
+      });
+
+  _addProxyMethod(b, 'getMatchedPath',
+      routeableMethodCall: 'getMatchedPath(path)',
+      requiredParameters: {
+        'path': 'String',
+      });
+}
+
+void _addProxyGetter(ClassBuilder b, String name) {
   b.methods.add(Method((b) {
-    b.name = 'getMatchedPath';
+    b.name = name;
+    b.type = MethodType.getter;
     b.lambda = true;
     b.annotations.add(const CodeExpression(Code('override')));
 
-    b.requiredParameters.add(
-      Parameter((b) => b
-        ..name = 'path'
-        ..type = refer('String')),
-    );
-    b.body = const Code('routeable.getMatchedPath(path)');
+    b.body = Code('routeable.$name');
+  }));
+}
+
+void _addProxyMethod(
+  ClassBuilder b,
+  String name, {
+  Map<String, String> requiredParameters = const {},
+  Map<String, String> optionalParameters = const {},
+  required String routeableMethodCall,
+}) {
+  b.methods.add(Method((b) {
+    b.name = name;
+    b.lambda = true;
+    b.annotations.add(const CodeExpression(Code('override')));
+
+    for (final entry in requiredParameters.entries) {
+      b.requiredParameters.add(
+        Parameter((b) => b
+          ..name = entry.key
+          ..type = refer(entry.value)),
+      );
+    }
+
+    for (final entry in optionalParameters.entries) {
+      b.optionalParameters.add(
+        Parameter((b) => b
+          ..name = entry.key
+          ..type = refer(entry.value)),
+      );
+    }
+
+    b.body = Code('routeable.$routeableMethodCall');
   }));
 }
