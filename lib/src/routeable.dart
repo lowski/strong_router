@@ -109,7 +109,7 @@ abstract class Routeable {
 
       for (var i = 0; i < pathSegments.length; i++) {
         final pathSegment = pathSegments.elementAt(i);
-        final uriSegment = uriSegments[i];
+        final uriSegment = uriSegments.elementAtOrNull(i);
 
         if (pathSegment.startsWith(':')) {
           continue;
