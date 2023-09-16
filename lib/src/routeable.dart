@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/widgets.dart';
 
+import '../strong_router.dart';
 import 'routed.dart';
 
 typedef RouteableBuilder = Widget Function(BuildContext context, Routed routed);
@@ -51,10 +52,7 @@ abstract class Routeable {
     List<String>? additionalParameters,
   }) = _Routeable;
 
-  Future<T?> pushTo<T extends Object?>(
-    BuildContext context, [
-    Map<String, dynamic>? parameters,
-  ]) {
+  RouteSettings _generateRouteSettings(Map<String, dynamic>? parameters) {
     String path = this.path;
     Map<String, Object?>? arguments = {};
 
@@ -93,9 +91,20 @@ abstract class Routeable {
       arguments = null;
     }
 
-    return Navigator.of(context).pushNamed(
-      path,
+    return RouteSettings(
+      name: path,
       arguments: arguments,
+    );
+  }
+
+  Future<T?> pushTo<T extends Object?>(
+    BuildContext context, [
+    Map<String, dynamic>? parameters,
+  ]) {
+    final settings = _generateRouteSettings(parameters);
+    return Navigator.of(context).pushNamed(
+      settings.name!,
+      arguments: settings.arguments,
     );
   }
 
@@ -119,6 +128,16 @@ abstract class Routeable {
       }
       return true;
     });
+  }
+
+  /// Generates a route for this routeable with the given [parameters].
+  Route<dynamic> generateRoute(
+    StrongRouter router, [
+    Map<String, dynamic>? parameters,
+  ]) {
+    final settings = _generateRouteSettings(parameters);
+
+    return router.generateRoute(settings);
   }
 }
 
