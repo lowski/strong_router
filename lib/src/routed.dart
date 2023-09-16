@@ -1,12 +1,16 @@
+import 'package:flutter/widgets.dart';
+
 import 'routeable.dart';
 
 class Routed<T extends Routeable> {
   final T routeable;
   final Map<String, Object?> parameters;
+  final RouteSettings? settings;
 
   const Routed({
     required this.routeable,
     required this.parameters,
+    required this.settings,
   });
 
   bool get hasFutureParameters =>
@@ -27,6 +31,7 @@ class Routed<T extends Routeable> {
     return Routed(
       routeable: routeable,
       parameters: resolvedParameters,
+      settings: settings,
     );
   }
 }

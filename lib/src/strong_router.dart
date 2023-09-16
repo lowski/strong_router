@@ -4,11 +4,40 @@ import 'debug.dart';
 import 'routeable.dart';
 import 'routed.dart';
 
+/// A router that can parse routes from a URL and build a route from a
+/// [Routeable].
+///
+/// The [buildRoute] function is used to build the route from the resolved
+/// [Routed] object. The default implementation uses [MaterialPageRoute]:
+///
+/// ```dart
+/// Route<dynamic> _defaultBuildRoute(
+///   Routed routed,
+///   RouteableBuilder builder,
+/// ) =>
+///    MaterialPageRoute(
+///      builder: (context) => builder(context, routed),
+///      settings: routed.settings,
+///    );
+/// ```
 class StrongRouter {
   final List<Routeable> routeables;
 
+  final Route<dynamic> Function(Routed routed, RouteableBuilder builder)
+      buildRoute;
+
+  static Route<dynamic> _defaultBuildRoute(
+    Routed routed,
+    RouteableBuilder builder,
+  ) =>
+      MaterialPageRoute(
+        builder: (context) => builder(context, routed),
+        settings: routed.settings,
+      );
+
   const StrongRouter({
     required this.routeables,
+    this.buildRoute = _defaultBuildRoute,
   });
 
   Routed? parseRoute(RouteSettings settings) {
@@ -74,6 +103,7 @@ class StrongRouter {
       return Routed(
         routeable: routeable,
         parameters: parameters,
+        settings: settings,
       );
     }
 
